@@ -1,0 +1,20 @@
+<div class="message message-left">
+    <img src="{{ url_for('static', filename='images/boy.png') }}" alt="Prominem">
+    <div class="message-content">
+        <p id="text"></p>
+        <img id="img" src="" alt="图片缩略图" onclick="showImage('')">
+        <span id="time"></span>
+    </div>
+</div>
+
+fetch('/upload', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      displayResult(data);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });

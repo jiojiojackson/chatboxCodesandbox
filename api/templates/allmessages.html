@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="60">
+  <title>百度知道</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/couple.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+  <style>
+    .floating-input-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+    }
+    .chat-container {
+      width: 80%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 180px;
+      /* margin: 5px 5px 150px 5px; */
+    }
+    .message {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .message img {
+      width: 50px;
+      height: 50px;
+      border-radius: 5%;
+      margin-right: 10px;
+    }
+    .message-content {
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .message-content img {
+      width: 100px;
+      cursor: pointer;
+    }
+    .message-content p {
+      margin: 0;
+    }
+    .message-content span {
+      font-size: 12px;
+      color: #999;
+    }
+    .message-left {
+      align-self: flex-start;
+    }
+    .message-right {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    {% for message in messages %}
+    {% if message.username == 'prominem' %}
+    <div class="message message-left">
+        <img src="{{ url_for('static', filename='images/boy.png') }}" alt="Prominem">
+        <div class="message-content">
+          {% if message.text %}
+          <p>{{ message.text }}</p>
+          {% endif %}
+          {% if message.imgUrl %}
+          <img src="{{ message.imgUrl }}" alt="图片缩略图" onclick="showImage('{{ message.imgUrl }}')">
+          {% endif %}
+          <span>{{ message.time }}</span>
+        </div>
+      </div>
+    {% else %}
+    <div class="message message-right">
+        <img src="{{ url_for('static', filename='images/girl.png') }}" alt="Elaine">
+        <div class="message-content">
+          {% if message.text %}
+          <p>{{ message.text }}</p>
+          {% endif %}
+          {% if message.imgUrl %}
+          <img src="{{ message.imgUrl }}" alt="图片缩略图" onclick="showImage('{{ message.imgUrl }}')">
+          {% endif %}
+          <span>{{ message.time }}</span>
+        </div>
+      </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <form class="floating-input-bar" id="floating-input-form" enctype="multipart/form-data">
+    <div class="form-row">
+      <div class="col">
+        <textarea class="form-control" rows="4" id="input-text" placeholder="输入文本"></textarea>
+      </div>
+      <div class="col-auto">
+        <input type="file" class="form-control-file" id="input-image" accept="image/*">
+        <img src="" alt="缩略图" id="thumbnail" style="display:none; max-width: 100px; max-height: 100px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">发送</button>
+      </div>
+    </div>
+  </form>
+  <a name="zhidao"></a><!--锚点处-->
+  <script>
+    function showImage(src) {
+      const img = new Image();
+      img.src = src;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      img.onclick = () => document.body.removeChild(img);
+      document.body.appendChild(img);
+    }
+  </script>
+  <script src="{{ url_for('static', filename='jquery-3.5.1.slim.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
+  <script>
+    document.getElementById('input-image').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('thumbnail').src = e.target.result;
+          document.getElementById('thumbnail').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        document.getElementById('thumbnail').style.display = 'none';
+      }
+    });
+
+    document.getElementById('floating-input-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      formData.append('text', document.getElementById('input-text').value);
+      const file = document.getElementById('input-image').files[0];
+      if (file) {
+        formData.append('input-image', file);
+      }
+      fetch('/chatbox/elaine', {
+        method: 'POST',
+        body: formData
+      }).then(response => {
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('发送失败');
+        }
+      }).catch(error => {
+        console.error('Error:', error);
+      });
+    });
+  </script>
+  <script>
+    window.location ="#zhidao";//自动跳转到锚点处
+  </script>
+</body>
+</html>

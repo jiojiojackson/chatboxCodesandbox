@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>百度知道</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/couple.ico') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"></script> -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.min.js"></script> -->
+  <style>
+    .floating-input-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+    }
+    .chat-container {
+      width: 80%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      /* margin-bottom: 180px; */
+      /* margin: 5px 5px 150px 5px; */
+    }
+    .message {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .message img {
+      width: 50px;
+      height: 50px;
+      border-radius: 5%;
+      margin-right: 10px;
+    }
+    .message-content {
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .message-content img {
+      width: 100px;
+      cursor: pointer;
+    }
+    .message-content p {
+      margin: 0;
+    }
+    .message-content span {
+      font-size: 12px;
+      color: #999;
+    }
+    .message-left {
+      align-self: flex-start;
+    }
+    .message-right {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container" id="container" style="top: 0; height: 66.666%;"></div>
+
+  <div class="floating-input-bar">
+    <div class="form-row">
+      <div class="col">
+        <textarea class="form-control" rows="4" id="input-text" placeholder="输入文本"></textarea>
+      </div>
+      <div class="col-auto">
+        <input type="file" class="form-control-file" id="input-image" accept="image/*">
+        <img src="" alt="缩略图" id="thumbnail" style="display:none; max-width: 100px; max-height: 100px;">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" id="send">发送</button>
+        <button class="btn btn-primary" id="history">聊天纪录</button>
+      </div>
+    </div>
+  </div>
+  <a name="zhidao"></a><!--锚点处-->
+  <script>
+    function showImage(src) {
+      const img = new Image();
+      img.src = src;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      img.onclick = () => document.body.removeChild(img);
+      document.body.appendChild(img);
+    }
+  </script>
+  <script>
+    var is_chat=true;
+    document.getElementById('input-image').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('thumbnail').src = e.target.result;
+          document.getElementById('thumbnail').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        document.getElementById('thumbnail').style.display = 'none';
+      }
+    });
+
+    var container = document.getElementById("container");
+
+    function addText(data) {
+      var newMessage = document.createElement("div");
+      if (data['name']=='elaine') {
+        newMessage.className = "message message-left";
+        if (data['text'] && data['imgUrl']) {
+          newMessage.innerHTML = `
+            <img src="{{ url_for('static', filename='images/girl.png') }}" alt="elaine">
+            <div class="message-content">
+              <p>${data['text']}</p>
+              <img src="${data['imgUrl']}" alt="图片缩略图" onclick="showImage('${data['imgUrl']}')">
+              <span>${data['time']}</span>
+            </div>
+          `;
+        } else if (data['text']) {
+          newMessage.innerHTML = `
+            <img src="{{ url_for('static', filename='images/girl.png') }}" alt="elaine">
+            <div class="message-content">
+              <p>${data['text']}</p>
+              <span>${data['time']}</span>
+            </div>
+          `;
+        } else {
+          newMessage.innerHTML = `
+            <img src="{{ url_for('static', filename='images/girl.png') }}" alt="elaine">
+            <div class="message-content">
+              <img src="${data['imgUrl']}" alt="图片缩略图" onclick="showImage('${data['imgUrl']}')">
+              <span>${data['time']}</span>
+            </div>
+          `;
+        }
+      } else if (data['name']=='prominem') {
+        newMessage.className = "message message-right";
+        if (data['text'] && data['imgUrl']) {
+          newMessage.innerHTML = `
+            <img src="{{ url_for('static', filename='images/boy.png') }}" alt="prominem">
+            <div class="message-content">
+              <p>${data['text']}</p>
+              <img src="${data['imgUrl']}" alt="图片缩略图" onclick="showImage('${data['imgUrl']}')">
+              <span>${data['time']}</span>
+            </div>
+          `;
+        } else if (data['text']) {
+          newMessage.innerHTML = `
+            <img src="{{ url_for('static', filename='images/boy.png') }}" alt="prominem">
+            <div class="message-content">
+              <p>${data['text']}</p>
+              <span>${data['time']}</span>
+            </div>
+          `;
+        } else {
+          newMessage.innerHTML = `
+            <img src="{{ url_for('static', filename='images/boy.png') }}" alt="prominem">
+            <div class="message-content">
+              <img src="${data['imgUrl']}" alt="图片缩略图" onclick="showImage('${data['imgUrl']}')">
+              <span>${data['time']}</span>
+            </div>
+          `;
+        }
+      }
+      
+
+      // 将新元素添加到<div class="chat-container" id="container"></div>中
+      container.appendChild(newMessage);
+    }
+    function refreshMessage() {
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      fetch("{{ url_for('messages') }}") // 发送GET请求给后端
+            .then(response => response.json()) // 解析返回的JSON数据
+            .then(data => {
+                data.forEach(item => {
+                  if (item['text'] || item['imgUrl']) {
+                    addText(item);
+                  }
+                });
+            });
+    }
+
+    function get_history() {
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      fetch("{{ url_for('allmessages') }}") // 发送GET请求给后端
+            .then(response => response.json()) // 解析返回的JSON数据
+            .then(data => {
+                data.forEach(item => {
+                  if (item['text'] || item['imgUrl']) {
+                    addText(item);
+                  }
+                });
+            });
+    }
+
+    $("#history").on("click", function () {
+      is_chat=false;
+      container.style.marginBottom = "180px";
+      get_history();
+    });
+
+    $("#send").on("click", function () {
+        is_chat=true;
+        container.style.marginBottom = "0px";
+        const input_text = $("#input-text").val();
+        const img_file = $('#input-image')[0].files[0];
+        if (input_text || img_file) {
+            document.getElementById("send").disabled = true;
+            $("#input-text").val("");
+            document.getElementById("input-image").value = null;
+            document.getElementById('thumbnail').src = '';
+            document.getElementById('thumbnail').style.display = 'none';
+            // Send the message to the Flask route
+
+            const formData = new FormData();
+            formData.append('image', img_file);
+            formData.append('text', input_text);
+            console.log('input_text'+input_text)
+            console.log('formData:'+formData)
+            fetch("{{ url_for('prominem') }}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+            if (response.ok) {
+              console.log('send message successfully');
+              refreshMessage();
+              document.getElementById("send").disabled = false;
+            } else {
+              console.log('send message fail');
+              document.getElementById("send").disabled = false;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        } else {
+          refreshMessage();
+        }
+    });
+
+    var timeout;
+
+    function startTimer() {
+        // 清除之前的计时器
+        clearTimeout(timeout);
+        
+        // 开始新的计时器
+        timeout = setTimeout(function() {
+            // 在这里执行你的js函数
+            // 示例：调用一个名为myFunction的函数
+            if (is_chat) {
+              location.reload();
+            }
+            
+        }, 5000); // 设置为5秒
+    }
+    
+    // 监听用户操作事件，每次操作重新开始计时
+    document.addEventListener("click", startTimer);
+    document.addEventListener("keypress", startTimer);
+    document.addEventListener("mousemove", startTimer);
+    document.addEventListener("scroll", startTimer);
+
+    window.onload = function() {
+      // 执行ddgo函数
+      refreshMessage();
+    };
+
+  </script>
+  <script>
+    window.location ="#zhidao";//自动跳转到锚点处
+  </script>
+</body>
+</html>
