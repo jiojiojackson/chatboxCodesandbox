@@ -1,9 +1,16 @@
 import sqlite3
 from werkzeug.security import generate_password_hash
-from models import *
+from index import *
+import os
 
-conn = sqlite3.connect('chat.db')
-with open('schema.sql', 'r') as f:
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.dirname(current_path)
+tmp_dir = os.path.join(root_path, 'tmp')
+if not os.path.exists(tmp_dir): os.mkdir(tmp_dir)
+data_dir = os.path.join(tmp_dir, 'chat.db')
+
+conn = sqlite3.connect(data_dir)
+with open(os.path.join(current_path, 'schema.sql'), 'r') as f:
     schema = f.read()
 conn.executescript(schema)
 conn.close
